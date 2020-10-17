@@ -1,32 +1,15 @@
 package com.moji4j;
 
 
+import java.util.List;
+
 public class MojiConverter {
-
-    public String convertRomajiToKatakana(String string) {
-
-        string = string.toLowerCase();
-        string = replaceLongVowelWithDashMarker(string);
-        string = replaceDoubleConsonantWithSokuonMarker(string, 'ッ');
-        string = replaceStringWithConversionTable(string, ConversionTable.getRomajiToKatakana());
-
-        return string;
-    }
 
     public String convertRomajiToHiragana(String string) {
 
         string = string.toLowerCase();
         string = replaceDoubleConsonantWithSokuonMarker(string, 'っ');
         string = replaceStringWithConversionTable(string, ConversionTable.getRomajiToHiragana());
-
-        return string;
-    }
-
-    public String convertKanaToRomaji(String string) {
-
-        string = replaceStringWithConversionTable(string, ConversionTable.getKanaToRomaji());
-        string = replaceDashMarkerWithLongVowel(string);
-        string = replaceSokuonMarkersWithDoubleConsonant(string);
 
         return string;
     }
@@ -45,10 +28,10 @@ public class MojiConverter {
             for (int substringLength = maxSubstringLength; substringLength > 0; substringLength--) {
 
                 String substring = string.substring(currentOffset, currentOffset + substringLength);
-                String replacementString = conversionTable.get(substring);
+                List<String> replacementString = conversionTable.get(substring);
 
                 // Replace substring if there's a match.
-                if (replacementString != null) {
+                if (!replacementString.isEmpty()) {
                     resultBuilder.append(replacementString);
 
                     currentOffset += substring.length();
@@ -149,7 +132,7 @@ public class MojiConverter {
     }
 
     private static boolean isRomanConsonant(char character) {
-        return character >= 'a' && character <= 'z' && ! isRomanVowel(character);
+        return character >= 'a' && character <= 'z' && !isRomanVowel(character);
     }
 
     private static boolean isRomanVowel(char character) {

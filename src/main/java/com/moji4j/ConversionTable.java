@@ -1,96 +1,75 @@
 package com.moji4j;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimaps;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URL;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.List;
 
-class ConversionTable {
+public class ConversionTable {
 
-    private static final String ROMAJI_TO_KATAKANA_FILE = "/romaji_to_katakana.csv";
-    private static final String ROMAJI_TO_HIRAGANA_FILE = "/romaji_to_hiragana.csv";
-    private static final String KANA_TO_ROMAJI_FILE = "/kana_to_romaji.csv";
-
-    private static ConversionTable romajiToKatakanaTable;
-    private static ConversionTable romajiToHiraganaTable;
-    private static ConversionTable kanaToRomajiTable;
-
-    private Map<String, String> conversionMap;
+    private final ListMultimap<String, String> conversionMap;
     private int maxKeyLength;
 
-    private ConversionTable(Map<String, String> conversionMap) {
+    private ConversionTable(ListMultimap<String, String> conversionMap) {
         this.conversionMap = conversionMap;
-
-        for (String key : conversionMap.keySet()) {
-
-            if (key.length() > maxKeyLength) {
-                maxKeyLength = key.length();
-            }
-        }
+        this.maxKeyLength = conversionMap.keySet().stream().mapToInt(String::length).max().orElse(0);
     }
 
-    int getMaxKeyLength() {
+    public int getMaxKeyLength() {
         return maxKeyLength;
     }
 
-    String get(String key) {
+    public List<String> get(String key) {
         return conversionMap.get(key);
     }
 
-    public static synchronized ConversionTable getRomajiToKatakana() {
+    private static class ConversionTableCache {
+        private static final String ROMAJI_TO_HIRAGANA_FILE = "/romaji_to_hiragana.csv";
 
-        if (romajiToKatakanaTable == null) {
-            romajiToKatakanaTable = createConversionTableFromResource(ROMAJI_TO_KATAKANA_FILE);
-        }
+        public static final ConversionTable romajiToHiraganaTable;
+        public static final ConversionTable hiraganaToRomajiTable;
 
-        return romajiToKatakanaTable;
-    }
-
-    public static synchronized ConversionTable getRomajiToHiragana() {
-
-        if (romajiToHiraganaTable == null) {
+        static {
             romajiToHiraganaTable = createConversionTableFromResource(ROMAJI_TO_HIRAGANA_FILE);
+            hiraganaToRomajiTable = new ConversionTable(Multimaps.invertFrom(romajiToHiraganaTable.conversionMap, ArrayListMultimap.create()));
         }
 
-        return romajiToHiraganaTable;
-    }
+        private static ConversionTable createConversionTableFromResource(String resourceName) {
 
-    public static synchronized ConversionTable getKanaToRomaji() {
+            try (InputStream inputStream = ConversionTable.class.getResourceAsStream(resourceName)) {
 
-        if (kanaToRomajiTable == null) {
-            kanaToRomajiTable = createConversionTableFromResource(KANA_TO_ROMAJI_FILE);
-        }
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                ListMultimap<String, String> conversionMap = ArrayListMultimap.create();
 
-        return kanaToRomajiTable;
-    }
+                String line;
+                while ((line = reader.readLine()) != null) {
 
-    private static ConversionTable createConversionTableFromResource(String resourceName) {
+                    int delimiterIndex = line.indexOf(',');
 
-        URL resourceUrl = ConversionTable.class.getResource(resourceName);
+                    String key = line.substring(0, delimiterIndex);
+                    String value = line.substring(delimiterIndex + 1);
 
-        try (InputStream inputStream = resourceUrl.openStream()) {
+                    conversionMap.put(key, value);
+                }
 
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-            Map<String, String> conversionMap = new TreeMap<String, String>();
+                return new ConversionTable(conversionMap);
 
-            String line;
-            while ((line = reader.readLine()) != null) {
-
-                int delimiterIndex = line.indexOf(',');
-
-                String key = line.substring(0, delimiterIndex);
-                String value = line.substring(delimiterIndex + 1);
-
-                conversionMap.put(key, value);
+            } catch (IOException exception) {
+                throw new RuntimeException(exception);
             }
-
-            return new ConversionTable(conversionMap);
-
-        } catch (IOException exception) {
-            throw new RuntimeException(exception);
         }
+    }
+
+    public static ConversionTable getRomajiToHiragana() {
+        return ConversionTableCache.romajiToHiraganaTable;
+    }
+
+    public static ConversionTable getHiraganaToRomaji() {
+        return ConversionTableCache.hiraganaToRomajiTable;
     }
 }
