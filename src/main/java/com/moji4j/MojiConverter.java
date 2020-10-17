@@ -5,7 +5,7 @@ import java.util.List;
 
 public class MojiConverter {
 
-    public String convertRomajiToHiragana(String string) {
+    public static String convertRomajiToHiragana(String string) {
 
         string = string.toLowerCase();
         string = replaceDoubleConsonantWithSokuonMarker(string, 'っ');
@@ -14,7 +14,7 @@ public class MojiConverter {
         return string;
     }
 
-    private String replaceStringWithConversionTable(String string, ConversionTable conversionTable) {
+    private static String replaceStringWithConversionTable(String string, ConversionTable conversionTable) {
 
         StringBuilder resultBuilder = new StringBuilder();
 
@@ -51,7 +51,7 @@ public class MojiConverter {
         return resultBuilder.toString();
     }
 
-    private String replaceLongVowelWithDashMarker(String string) {
+    private static String replaceLongVowelWithDashMarker(String string) {
 
         StringBuilder resultBuilder = new StringBuilder(string);
 
@@ -69,7 +69,7 @@ public class MojiConverter {
         return resultBuilder.toString();
     }
 
-    private String replaceDoubleConsonantWithSokuonMarker(String string, char sokuonMarker) {
+    private static String replaceDoubleConsonantWithSokuonMarker(String string, char sokuonMarker) {
 
         StringBuilder resultBuilder = new StringBuilder(string);
 
@@ -90,7 +90,7 @@ public class MojiConverter {
         return resultBuilder.toString();
     }
 
-    private String replaceSokuonMarkersWithDoubleConsonant(String string) {
+    private static String replaceSokuonMarkersWithDoubleConsonant(String string) {
 
         StringBuilder resultBuilder = new StringBuilder(string);
 
@@ -112,7 +112,7 @@ public class MojiConverter {
         return resultBuilder.toString();
     }
 
-    private String replaceDashMarkerWithLongVowel(String string) {
+    private static String replaceDashMarkerWithLongVowel(String string) {
 
         StringBuilder resultBuilder = new StringBuilder(string);
 
